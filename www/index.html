@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="format-detection" content="telephone=no">
+        <meta name="msapplication-tap-highlight" content="no">
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/index.css">
+        <title>Hello World</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+    <div ng-app="myApp" ng-controller="DebugCtrl">
+Enter Dayas : <input type="number" ng-model="days"/ ><button ng-click="test();">Show</button>
+ <br><br>
+Search: <input ng-model="Search"></input>
+
+<div class="row" style="margin: 10px">
+<table class="table">
+<thead>
+	<tr>
+	<td>
+		Name
+	</td>
+	<td>
+		Number
+	</td>
+	<td>
+		Type
+	</td>
+	<td>
+		Date
+	</td>
+	<td>
+		Duration
+	</td>
+	</tr>
+</thead>
+<tbody >
+	<tr ng-repeat="call in data.lastCall | filter:Search" >
+	<td>
+		{{call.cachedName}}
+	</td>
+	<td>
+		{{call.number}}
+	</td>
+	<td>
+		{{callTypeDisplay(call.type)}}
+	</td>
+	<td>
+		{{call.date | date}}
+	</td>
+	<td>
+		{{call.duration}} seconds
+	</td>
+	</tr>
+</tbody>
+</table>
+</div>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+    </body>
+</html>
+
+
+
+<script>
+
+var app = angular.module('myApp', [])
+
+.factory('CallLogService', ['$q', function($q) {
+    return {
+
+        list : function(days) {
+            var q = $q.defer();
+            // days is how many days back to go
+            window.plugins.calllog.list(days, function (response) {
+                q.resolve(response.rows);
+            }, function (error) {
+                q.reject(error)
+            });
+            return q.promise;
+        },
+
+        contact : function(phoneNumber) {
+            var q = $q.defer();
+            window.plugins.calllog.contact(phoneNumber, function (response) {
+                q.resolve(response);
+            }, function (error) {
+                q.reject(error)
+            });
+            return q.promise;
+        },
+
+        show : function(phoneNumber) {
+            var q = $q.defer();
+            window.plugins.calllog.show(phoneNumber, function (response) {
+                q.resolve(response);
+            }, function (error) {
+                q.reject(error)
+            });
+            return q.promise;
+        },
+
+        delete : function(phoneNumber) {
+            var q = $q.defer();
+            window.plugins.calllog.delete(id, function (response) {
+                q.resolve(response);
+            }, function (error) {
+                q.reject(error)
+            });
+            return q.promise;
+        }
+    }
+}])
+
+.controller('DebugCtrl', ['$scope', 'CallLogService','$http',function ($scope, CallLogService,$http, LocalStorage) {
+        $scope.data = {};
+        $scope.callTypeDisplay = function(type) {
+            switch(type) {
+                case 1:
+                    return 'Incoming';
+                case 2:
+                    return 'Outgoing';
+                case 3:
+                    return 'Missed';
+                default:
+                    return 'Unknown';
+            }
+        };
+
+    $scope.test=function(){
+        CallLogService.list(parseInt($scope.days)).then(
+            function(callLog) {
+                $scope.data.lastCall = callLog;
+            },
+            function(error) {
+                console.error(error);
+            });
+    }
+    }]);
+</script>
